@@ -1,3 +1,4 @@
-require 'note'
+require 'factory'
 
-puts SA.to_s
+note_buckets = Factory.instance.create_notes("p; pmr grs n, pnsrn")
+puts note_buckets.to_s

@@ -1,5 +1,10 @@
 require 'primitives/note'
+require 'note_bucket'
+require 'parser'
+
 require 'singleton'
+
+#TODO Pretty print
 
 class Factory
   include Singleton
@@ -46,44 +51,27 @@ class Factory
   end
 
   def create_notes(notation)
-    notated = [NoteBucket.new]
+    note_buckets = [NoteBucket.new]
     current_note = NullNote.new
 
-    notation.each_char do |ch|
-      if note?(ch)
-        current_note = self.create_note(ch)
-        notated.last << current_note
-      elsif octave?(ch)
-        current_note.octave = self.create_octave(ch)
-      elsif duration?(ch)
-        current_note.duration << self.create_duration(ch)
-      elsif gap?(ch)
-        notated << ch
-        notated << NoteBucket.new
-      elsif bar?(ch)
-        notated << self.create_bar(ch)
+    Parser.new.parse(notation) do |token|
+      if token.note?
+        current_note = self.create_note(token.to_s)
+        note_buckets.last << current_note
+      elsif token.octave?
+        current_note.octave = self.create_octave(token.to_s)
+      elsif token.duration?
+        current_note.duration << self.create_duration(token.to_s)
+      elsif token.gap?
+        note_buckets << token.to_s
+        note_buckets << NoteBucket.new
+      elsif token.bar?
+        note_buckets << self.create_bar(token.to_s)
       end
     end
 
-    notated
+    note_buckets
   end
 
-  private
-
-  def note?(ch)
-    ch == 's' || ch == 'r' || ch == 'g' || ch == 'm' || ch == 'p' || ch == 't' || ch == 'n'
-  end
-
-  def octave?(ch)
-    ch == "'" || ch == '.'
-  end
-
-  def duration?(ch)
-    ch == ',' || ch == ';' || ch == '-'
-  end
-
-  def gap?(ch)
-    ch == ' '
-  end
 end
 
