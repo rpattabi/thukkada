@@ -1,4 +1,5 @@
 require 'primitives/note'
+require 'primitives/gap'
 require 'note_bucket'
 require 'parser'
 
@@ -51,26 +52,26 @@ class Factory
   end
 
   def create_notes(notation)
-    note_buckets = [NoteBucket.new]
+    note_bucket = []
     current_note = NullNote.new
 
     Parser.new.parse(notation) do |token|
       if token.note?
         current_note = self.create_note(token.to_s)
-        note_buckets.last << current_note
+        note_bucket << current_note
       elsif token.octave?
         current_note.octave = self.create_octave(token.to_s)
       elsif token.duration?
         current_note.duration << self.create_duration(token.to_s)
       elsif token.gap?
-        note_buckets << token.to_s
-        note_buckets << NoteBucket.new
+        note_bucket << Gap.new(token.to_s)
+        note_bucket << NoteBucket.new
       elsif token.bar?
-        note_buckets << self.create_bar(token.to_s)
+        note_bucket << self.create_bar(token.to_s)
       end
     end
 
-    note_buckets
+    note_bucket
   end
 
 end
